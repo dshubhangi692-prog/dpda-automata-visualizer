@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DPDA Studio – Bracket Checker v2</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f6f5f1;--card:#fff;--ink:#1d1d22;--mut:#6b6b76;--line:#d9d7cf;--acc:#4f46e5;--ok:#15803d;--bad:#b91c1c;--hot:#fcd34d;--sx:#0f766e;--cm:#8a8a96;--h0:#d9480f;--h1:#2f9e44;--h2:#1c7ed6;--h3:#ae3ec9;--h4:#b26a00;--h5:#0b7285}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14141a;--card:#1d1d26;--ink:#ecebf3;--mut:#9897a6;--line:#33333f;--acc:#8b85ff;--ok:#4ade80;--bad:#f87171;--hot:#b45309;--sx:#5eead4;--cm:#7d7c8c;--h0:#ff8c5a;--h1:#69db7c;--h2:#74c0fc;--h3:#e599f7;--h4:#ffc078;--h5:#66d9e8}}
+:root[data-theme="dark"]{--bg:#14141a;--card:#1d1d26;--ink:#ecebf3;--mut:#9897a6;--line:#33333f;--acc:#8b85ff;--ok:#4ade80;--bad:#f87171;--hot:#b45309;--sx:#5eead4;--cm:#7d7c8c;--h0:#ff8c5a;--h1:#69db7c;--h2:#74c0fc;--h3:#e599f7;--h4:#ffc078;--h5:#66d9e8}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{padding:16px 18px 0;max-width:1200px;margin:auto}h1{margin:0;font-size:22px}header p{margin:2px 0 0;color:var(--mut)}
+main{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:14px;padding:14px 18px 24px;max-width:1200px;margin:auto}
+@media(max-width:820px){main{grid-template-columns:minmax(0,1fr)}}
+.p{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:12px}
+#srcPanel.drag{outline:3px dashed var(--acc);outline-offset:-3px}
+h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin:0 0 8px}
+select,textarea{background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 9px;font:13px ui-monospace,Menlo,Consolas,monospace}
+select{max-width:100%}
+textarea{width:100%;min-height:110px;margin-top:8px;resize:vertical}
+button{background:var(--acc);color:#fff;border:0;border-radius:8px;padding:8px 14px;font:600 13px system-ui;cursor:pointer}
+button:focus-visible,select:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+button:disabled{opacity:.4;cursor:default}button.s{background:transparent;color:var(--ink);border:1px solid var(--line)}button.s.on{background:var(--ink);color:var(--card)}
+.row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px}
+label.f{display:flex;gap:6px;align-items:center;font:12px system-ui;color:var(--mut)}
+.m{color:var(--mut);font-size:12px}
+.code{font:14px/1.6 ui-monospace,Menlo,Consolas,monospace;background:var(--bg);border:1px solid var(--line);border-radius:8px;margin-top:8px;min-height:80px}
+.cv{position:relative;white-space:pre;max-height:340px;overflow:auto;padding:8px 0}
+.cv .l{padding:0 10px 0 0;min-height:1.6em}
+.cv .gn{display:inline-block;width:5ch;text-align:right;margin-right:10px;color:var(--mut);opacity:.7;user-select:none;border-right:1px solid var(--line);padding-right:6px}
+.cv .l.le .gn{color:var(--bad);opacity:1;font-weight:700}
+.cv .gap{color:var(--mut);padding:0 10px;font-size:12px}
+.d{opacity:.5}.cur{background:var(--hot);color:#000;border-radius:3px;opacity:1}.op{text-decoration:underline wavy var(--acc);font-weight:700}
+.e2{text-decoration:underline wavy var(--bad)}.er{background:var(--bad);color:#fff;border-radius:3px;opacity:1}
+.sx{color:var(--sx)}.cm{color:var(--cm);font-style:italic}
+.h0{color:var(--h0);font-weight:700}.h1{color:var(--h1);font-weight:700}.h2{color:var(--h2);font-weight:700}.h3{color:var(--h3);font-weight:700}.h4{color:var(--h4);font-weight:700}.h5{color:var(--h5);font-weight:700}
+.cur.sx,.cur.cm,.cur[class*=" h"]{color:#000}
+.msg{margin-top:10px;padding:10px;border-radius:8px;background:var(--bg);border-left:4px solid var(--acc)}.msg.ok{border-color:var(--ok)}.msg.bad{border-color:var(--bad)}.msg code{display:block;margin-top:4px;color:var(--mut);font:12px ui-monospace,monospace}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}.chip{border:1px solid var(--line);border-radius:99px;padding:2px 10px;font:600 12px ui-monospace,monospace}
+#sb{background:var(--bg);border:1px dashed var(--line);border-radius:10px;padding:10px 10px 8px;min-height:340px;display:flex;flex-direction:column;justify-content:flex-end;position:relative;transition:box-shadow .3s}
+#sb.win{box-shadow:0 0 0 3px var(--ok)}#sb.lose{box-shadow:0 0 0 3px var(--bad)}#sb.shake{animation:sh .35s}
+#sb .top{position:absolute;top:8px;right:10px;color:var(--mut);font-size:11px}
+#stack{display:flex;flex-direction:column-reverse;gap:4px}
+.more{text-align:center;color:var(--mut);font-size:12px}
+.blk{height:34px;border-radius:7px;color:#fff;font:700 16px ui-monospace,monospace;display:flex;align-items:center;justify-content:center;gap:8px}.blk small{font:11px system-ui;opacity:.85}
+.blk.in{animation:drop .4s cubic-bezier(.3,1.4,.5,1)}.blk.out{animation:rise .35s forwards}
+.c0{background:#3b82f6}.c1{background:#059669}.c2{background:#d97706}.cz{background:#6b7280}
+@keyframes drop{from{transform:translateY(-120px);opacity:0}}@keyframes rise{to{transform:translateY(-100px) scale(.8);opacity:0}}@keyframes sh{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+@media(prefers-reduced-motion:reduce){.blk.in,.blk.out,#sb.shake{animation:none}}
+table{border-collapse:collapse;width:100%;font:12px ui-monospace,monospace}td{padding:2px 6px;border-bottom:1px solid var(--line)}tr.hit td{background:var(--hot);color:#000}
+summary{cursor:pointer;font-weight:600}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:10px}
+.card{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--bg)}.card b{display:block;font-size:19px;line-height:1.25}.card span{color:var(--mut);font-size:12px}
+.card.ok{border-color:var(--ok)}.card.ok b{color:var(--ok)}.card.bad{border-color:var(--bad)}.card.bad b{color:var(--bad)}
+.ce{border-left:4px solid var(--bad);background:var(--bg);border-radius:6px;padding:6px 8px;margin:6px 0;cursor:pointer}
+.ce pre{margin:0;font:12px/1.45 ui-monospace,Menlo,Consolas,monospace;white-space:pre;overflow-x:auto}
+#chart{width:100%;height:84px;display:block;background:var(--bg);border:1px solid var(--line);border-radius:8px}
+#trace{max-height:210px;overflow:auto;font:11.5px/1.5 ui-monospace,Menlo,Consolas,monospace;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+.tc{white-space:pre}.tc.now{background:var(--hot);color:#000;border-radius:3px}.tc.d{opacity:.6}
+#dg .eg line,#dg .eg path{stroke:var(--mut);stroke-width:1.6;fill:none}
+#dg .eg.hot line,#dg .eg.hot path{stroke:var(--acc);stroke-width:3.2}
+#dg .eg text{fill:var(--mut);font:10.5px ui-monospace,monospace;text-anchor:middle}
+#dg .nd .main{fill:var(--card);stroke:var(--ink);stroke-width:1.6}#dg .nd .ring{fill:none;stroke:var(--ink);stroke-width:1.4}
+#dg .nd text{fill:var(--ink);font:600 12px ui-monospace,monospace;text-anchor:middle;dominant-baseline:central}
+#dg .nd.act .main{fill:var(--acc);stroke:var(--acc)}#dg .nd.act text{fill:#fff}
+#dg marker path{fill:var(--mut)}
+#toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--card);padding:9px 16px;border-radius:99px;font:600 13px system-ui;max-width:90vw;z-index:9;box-shadow:0 4px 18px rgba(0,0,0,.25)}
+.kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;font:11px ui-monospace,monospace}
+</style></head><body>
+<header><h1>🥞 DPDA Studio · Bracket Checker <span class="chip" style="vertical-align:middle">v2</span></h1><p>The syntax check your compiler and code editor run on <b>( ) [ ] { }</b>, built as a <b>DPDA (Deterministic Pushdown Automaton)</b>. Pick a <b>language preset</b>, <b>open a real file</b>, get a full report – then watch the machine work, or <b>be the DPDA yourself</b>.</p></header>
+<main>
+<section>
+ <div class="p" id="srcPanel"><h2>1 · Source code</h2>
+  <div class="row" style="margin-top:0">
+   <label class="f">Language preset <select id="lang" aria-label="Language preset"></select></label>
+   <label class="f">Example <select id="ex" aria-label="Example"></select></label>
+   <button class="s" id="openBtn">📂 Open file…</button><input type="file" id="file" hidden accept=".js,.jsx,.mjs,.cjs,.ts,.tsx,.c,.h,.cpp,.hpp,.cc,.java,.cs,.go,.rs,.kt,.py,.pyw,.json,.lisp,.el,.scm,.clj,.rkt,.txt,.md">
+  </div>
+  <div class="row"><span id="finfo" class="chip"></span><span class="m" id="lnote"></span></div>
+  <textarea id="src" spellcheck="false" aria-label="Source code" placeholder="Paste code here – or drop a .js / .c / .py / .json file anywhere on this panel."></textarea>
+  <div id="code" class="code cv" aria-live="off"></div>
+  <div class="row"><label class="m"><input type="checkbox" id="heat" checked> rainbow brackets (colour = nesting depth)</label><span class="m">· <span style="color:var(--sx)">teal</span> = string · <i>grey italic</i> = comment · <span style="text-decoration:underline wavy var(--bad)">red wave</span> = error</span></div>
+ </div>
+
+ <div class="p"><h2>2 · File report</h2><div id="repBody"></div></div>
+
+ <div class="p"><h2>3 · Run it</h2>
+  <div class="row" style="margin-top:0"><button class="s on" id="mw">Watch the DPDA</button><button class="s" id="mg">You be the DPDA</button><span id="score" class="chip" hidden></span></div>
+  <div class="row" id="watch"><button class="s" id="bb" onclick="back()">◀ Back</button><button id="bs" onclick="step()">Step ▶</button><button class="s" onclick="auto()">Auto-play</button><button class="s" onclick="stop()">Pause</button><button class="s" onclick="runEnd()">Run to end ⏭</button><label class="m">slow <input id="spd" type="range" min="150" max="1400" value="700" style="width:90px;vertical-align:middle"> fast</label></div>
+  <div class="row" id="game" hidden><button onclick="guess('push')">⬇ Push</button><button onclick="guess('pop')">⬆ Pop</button><button onclick="guess('skip')">➡ Ignore</button><button id="gmode" onclick="guess('mode')">🔀 Switch state</button><button onclick="guess('accept')">✔ Accept</button><button onclick="guess('reject')" style="background:var(--bad)">✘ Reject</button></div>
+  <div class="row"><button class="s" onclick="init()">Reset</button><span class="m">Keyboard: <span class="kbd">→</span> step · <span class="kbd">←</span> back</span></div>
+  <div id="msg" class="msg"></div></div>
+
+ <details class="p"><summary>The DPDA behind it (definition + live transition table)</summary>
+  <p id="def"></p>
+  <p><small class="m">Deterministic: at most one rule for every (state, input, stack-top) combination and no ε-moves. A missing rule is the implicit dead state = reject. <b>·</b> means “any stack symbol, stack untouched”. Brackets inside strings and comments are ignored because in <b>qstr / qline / qblk</b> the machine never looks at the stack – exactly what a real compiler front-end has to do. Bracket structure is a deterministic CFL, so a single left-to-right pass is enough.</small></p>
+  <table id="tbl"></table></details>
+</section>
+<section>
+ <div class="p"><h2>Machine</h2><div class="chips"><span class="chip" id="cq"></span><span class="chip" id="cd"></span><span class="chip" id="cn"></span><span class="chip" id="ck"></span></div>
+  <div id="sb"><span class="top">top ↓</span><div id="stack"></div></div>
+  <small class="m">Each block remembers where it was opened (@line:col) so errors can point at the culprit.</small></div>
+ <div class="p"><h2>State diagram</h2>
+  <svg id="dg" viewBox="0 0 470 235" width="100%" role="img" aria-label="State diagram of the DPDA">
+   <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z"/></marker></defs>
+   <g class="eg" id="e_str" data-need="str"><line x1="207.9" y1="105.2" x2="97.1" y2="52.8" marker-start="url(#ar)" marker-end="url(#ar)"/><text id="lb_str" x="132" y="62"></text></g>
+   <g class="eg" id="e_line" data-need="line"><line x1="205" y1="118" x2="100" y2="118" marker-start="url(#ar)" marker-end="url(#ar)"/><text id="lb_line" x="152" y="110"></text></g>
+   <g class="eg" id="e_blk" data-need="blk"><line x1="207.9" y1="130.8" x2="97.1" y2="183.2" marker-start="url(#ar)" marker-end="url(#ar)"/><text id="lb_blk" x="138" y="186"></text></g>
+   <g class="eg" id="e_acc"><line x1="265" y1="118" x2="368" y2="118" marker-end="url(#ar)"/><text x="316" y="108">$ , Z</text></g>
+   <g class="eg" id="e_loop"><path d="M218 92 C195 38 275 38 252 92" marker-end="url(#ar)"/><text x="235" y="40">( ) [ ] { } o</text></g>
+   <g class="eg"><line x1="235" y1="210" x2="235" y2="150" marker-end="url(#ar)"/><text x="262" y="200">start</text></g>
+   <g class="nd" id="n_q0"><circle class="main" cx="235" cy="118" r="28"/><text x="235" y="118">q0</text></g>
+   <g class="nd" id="n_qstr" data-need="str"><circle class="main" cx="70" cy="40" r="28"/><text x="70" y="40">qstr</text></g>
+   <g class="nd" id="n_qline" data-need="line"><circle class="main" cx="70" cy="118" r="28"/><text x="70" y="118">qline</text></g>
+   <g class="nd" id="n_qblk" data-need="blk"><circle class="main" cx="70" cy="196" r="28"/><text x="70" y="196">qblk</text></g>
+   <g class="nd" id="n_qacc"><circle class="main" cx="400" cy="118" r="28"/><circle class="ring" cx="400" cy="118" r="23"/><text x="400" y="118">qacc</text></g>
+  </svg><small class="m">Active state is filled; the edge just used lights up. Loops on q0 are the push / pop / ignore moves.</small></div>
+ <div class="p"><h2>Configuration trace ⊢</h2><div id="trace"></div><small class="m">(state, remaining input, stack – top first)</small></div>
+</section>
+</main>
+<div id="toast" hidden></div>
+<script>
+const $=i=>document.getElementById(i),esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+/*ENGINE-START*/
+const OPEN={'(':')','[':']','{':'}'},CLOSE={')':'(',']':'[','}':'{'};
+const LANGS={
+ js:{n:'JavaScript / TypeScript',ext:['js','jsx','mjs','cjs','ts','tsx'],line:['//'],blk:[['/*','*/']],str:[{o:'"'},{o:"'"},{o:'`',ml:1}],note:'Not modelled: regex literals such as /[(]/ and ${…} expressions inside template strings (the whole template counts as one string).'},
+ c:{n:'C / C++ / Java / C# / Go',ext:['c','h','cpp','hpp','cc','java','cs','go','rs','kt'],line:['//'],blk:[['/*','*/']],str:[{o:'"'},{o:"'"}],note:'Not modelled: raw strings R"(…)" and C++14 digit separators.'},
+ py:{n:'Python',ext:['py','pyw'],line:['#'],blk:[],str:[{o:'"""',ml:1},{o:"'''",ml:1},{o:'"'},{o:"'"}],note:'Triple-quoted strings may span lines. Prefixes (r, f, b) are treated like plain strings, so {…} inside f-strings is skipped.'},
+ json:{n:'JSON',ext:['json'],line:[],blk:[],str:[{o:'"'}],note:'Strict JSON has no comments, so // or /* is just text here. Only brackets and strings are checked (not commas or colons).'},
+ lisp:{n:'Lisp / Scheme / Clojure',ext:['lisp','el','scm','clj','cljs','rkt'],line:[';'],blk:[['#|','|#']],str:[{o:'"'}],note:'Character literals such as #\\( are not modelled.'},
+ plain:{n:'Plain text (brackets only)',ext:['txt','md'],line:[],blk:[],str:[],note:'No strings or comments: every bracket counts – the classic 2-state DPDA.'}
+};
+const compiled={};
+function comp(key){if(compiled[key])return compiled[key];const d=LANGS[key],toks=[];
+ d.line.forEach(t=>toks.push({k:'line',t}));d.blk.forEach(p=>toks.push({k:'blk',t:p[0],def:p}));d.str.forEach(s=>toks.push({k:'str',t:s.o,def:s}));
+ toks.sort((a,b)=>b.t.length-a.t.length);return compiled[key]={key,d,toks,first:new Set(toks.map(t=>t.t[0]))}}
+function newM(code,key,opt){opt=opt||{};return{code,L:comp(key),i:0,q:'q0',cur:null,tokPos:-1,st:[{s:'Z',pos:-1}],status:'run',errs:[],edits:[],recover:!!opt.recover,fired:null,
+ stat:{cnt:{'(':0,'[':0,'{':0},cl:0,max:0,maxPos:-1,str:0,com:0},cls:opt.cls||null,dep:opt.dep||null,tl:opt.tl||null}}
+function tokAt(m,j){if(!m.L.first.has(m.code[j]))return null;for(const t of m.L.toks)if(m.code.startsWith(t.t,j))return t;return null}
+function special(m,j){const c=m.code[j];return c in OPEN||c in CLOSE||tokAt(m,j)!==null}
+/* one DPDA move. strict mode: first error = dead state. recover mode: panic-mode recovery to collect every error + a fix plan */
+function adv(m){
+ const code=m.code,n=code.length,i=m.i,q=m.q,rec=m.recover,top=m.st[m.st.length-1];
+ const ev=(k,b,row,x)=>Object.assign({k,a:i,b,row,from:q,to:m.q,lex:0},x);
+ const bad=(e,row)=>{m.errs.push(e);if(!rec)m.status='rej';m.fired=row;return ev('fail',i,row,{err:e})};
+ if(i>=n){
+  if(q==='qstr'||q==='qblk'){const s=q==='qstr';
+   const r=bad({pos:m.tokPos,kind:s?'str':'blk',msg:s?`unterminated string literal – the closing ${m.cur.o} never appears`:`unterminated block comment – the closing ${m.cur[1]} never appears`},s?'L:str:eof':'L:blk:eof');
+   if(rec)m.q='q0';return r}
+  if(top.s==='Z'){m.status=(rec&&m.errs.length)?'rej':'acc';if(m.status==='acc')m.q='qacc';m.fired='$|Z';return ev(m.status==='acc'?'accept':'end',i,'$|Z')}
+  const e=bad({pos:top.pos,kind:'unclosed',msg:`'${top.s}' is never closed`},'$|'+top.s);
+  if(rec){const rest=m.st.slice(1).reverse();for(let k=1;k<rest.length;k++)m.errs.push({pos:rest[k].pos,kind:'unclosed',msg:`'${rest[k].s}' is never closed`});
+   m.edits.push({pos:n,del:0,ins:rest.map(x=>OPEN[x.s]).join(''),eof:true});m.st.length=1;m.status='rej'}
+  return e}
+ if(q==='qstr'){const d=m.cur,cl=d.o;
+  if(code.startsWith(cl,i)){m.i=i+cl.length;m.q='q0';return ev('mode',m.i,'L:str:close',{lex:1})}
+  if(!d.ml&&code[i]==='\n'){const e=bad({pos:m.tokPos,kind:'str',msg:`unterminated string literal – the line ended before the closing ${d.o}`},'L:str:nl');if(rec)m.q='q0';return e}
+  let j=i;while(j<n){if(code.startsWith(cl,j))break;const c=code[j];if(c==='\\'){j+=2;continue}if(!d.ml&&c==='\n')break;j++}
+  if(j>n)j=n;m.i=j;return ev('skip',j,'L:str:body',{lex:1})}
+ if(q==='qline'){if(code[i]==='\n'){m.i=i+1;m.q='q0';return ev('mode',m.i,'L:line:exit',{lex:2})}
+  let j=code.indexOf('\n',i);if(j<0)j=n;m.i=j;return ev('skip',j,'L:line:body',{lex:2})}
+ if(q==='qblk'){const cl=m.cur[1];if(code.startsWith(cl,i)){m.i=i+cl.length;m.q='q0';return ev('mode',m.i,'L:blk:close:'+cl,{lex:2})}
+  let j=code.indexOf(cl,i);if(j<0)j=n;m.i=j;return ev('skip',j,'L:blk:body',{lex:2})}
+ /* q0 */
+ const tk=tokAt(m,i);
+ if(tk){m.tokPos=i;m.i=i+tk.t.length;
+  if(tk.k==='str'){m.q='qstr';m.cur=tk.def;m.stat.str++;return ev('mode',m.i,'L:enterStr:'+tk.t,{lex:1})}
+  if(tk.k==='line'){m.q='qline';m.stat.com++;return ev('mode',m.i,'L:enterLine:'+tk.t,{lex:2})}
+  m.q='qblk';m.cur=tk.def;m.stat.com++;return ev('mode',m.i,'L:enterBlk:'+tk.t,{lex:2})}
+ const ch=code[i],row=ch+'|'+top.s;
+ if(ch in OPEN){m.st.push({s:ch,pos:i});m.i=i+1;const d=m.st.length-1;m.stat.cnt[ch]++;if(d>m.stat.max){m.stat.max=d;m.stat.maxPos=i}
+  if(m.dep)m.dep[i]=d;if(m.tl)m.tl.push(i,d);return ev('push',i+1,row,{pushed:true})}
+ if(ch in CLOSE){
+  if(top.s===CLOSE[ch]){if(m.dep)m.dep[i]=m.st.length-1;m.st.pop();m.i=i+1;m.stat.cl++;if(m.tl)m.tl.push(i,m.st.length-1);return ev('pop',i+1,row,{popped:top})}
+  if(top.s==='Z'){const e=bad({pos:i,kind:'extra',msg:`unexpected '${ch}' – nothing is open to close`},row);if(rec){m.edits.push({pos:i,del:1,ins:''});m.i=i+1}return e}
+  const e=bad({pos:i,rel:top.pos,kind:'mismatch',msg:`'${ch}' cannot close '${top.s}' – expected '${OPEN[top.s]}'`},row);
+  if(rec){let k=-1;for(let x=m.st.length-1;x>=1;x--)if(m.st[x].s===CLOSE[ch]){k=x;break}
+   if(k>0){const above=m.st.slice(k+1).reverse();
+    for(let y=1;y<above.length;y++)m.errs.push({pos:above[y].pos,kind:'unclosed',msg:`'${above[y].s}' is never closed`});
+    m.edits.push({pos:i,del:0,ins:above.map(x=>OPEN[x.s]).join('')});
+    if(m.dep)m.dep[i]=k;m.st.length=k;m.stat.cl++;if(m.tl)m.tl.push(i,m.st.length-1)}
+   else m.edits.push({pos:i,del:1,ins:''});
+   m.i=i+1}
+  return e}
+ let j=i+1;while(j<n&&!special(m,j))j++;m.i=j;return ev('skip',j,'o|'+top.s)}
+function analyze(code,key){const t0=performance.now(),n=code.length,cls=new Uint8Array(n),dep=new Uint16Array(n),tl=[];
+ const A=newM(code,key,{recover:true,cls,dep,tl});let g=0;
+ while(A.status==='run'&&g++<n*3+10){const e=adv(A);if(e.lex)cls.fill(e.lex,e.a,e.b)}
+ A.tl=tl;A.ms=performance.now()-t0;return A}
+/*ENGINE-END*/
+
+/* ================= UI ================= */
+const COL={'(':'c0','[':'c1','{':'c2',Z:'cz'};
+let m,A,H=[],T=[],LS=[0],lang='js',fileName=null,focus=null,hl=null,mode='w',ok=0,tries=0,tm,dbt,rowMap={},hit=null,tt;
+const FN=()=>fileName||('snippet.'+LANGS[lang].ext[0]);
+function lineOf(p){let lo=0,hi=LS.length-1;while(lo<hi){const mid=(lo+hi+1)>>1;if(LS[mid]<=p)lo=mid;else hi=mid-1}return lo}
+const at=p=>(p==null||p<0)?'–':(l=>`${l+1}:${p-LS[l]+1}`)(lineOf(p));
+function toast(t){const e=$('toast');e.textContent=t;e.hidden=false;clearTimeout(tt);tt=setTimeout(()=>e.hidden=true,3600)}
+
+const stress=()=>{let s='// auto-generated stress test (~100,000 characters)\n',k=0;
+ while(s.length<100000){s+=`function f${k}(a) { return [ (a * ${k}), {x: [1, 2, (3)], s: "( [ {"} ]; }\n`;k++;if(k===600)s+='const deep = '+'('.repeat(120)+'0'+')'.repeat(120)+';\n'}return s};
+const EX=[
+ {n:'✔ JavaScript – valid',l:'js',c:'function area(r) {\n  return [Math.PI * (r * r), {unit: "cm"}];\n}'},
+ {n:'✘ JavaScript – wrong closer',l:'js',c:'if (items[0) {\n  run();\n}'},
+ {n:'✘ JavaScript – unclosed brace',l:'js',c:'for (i = 0; i < n; i++) {\n  print(a[i]);\n'},
+ {n:'✘ JavaScript – extra closer',l:'js',c:'x = (1 + 2));'},
+ {n:'✔ JavaScript – brackets inside strings & comments',l:'js',c:'// a stray ) in a comment is fine\nconst msg = "unbalanced ( inside a string";\n/* and { in a block comment */\nconst tpl = `template [ ${1 + 1} ]`;\nconst ok = [1, 2, (3)];'},
+ {n:'✔ C – valid (char literal + string)',l:'c',c:`#include <stdio.h>\n\nint main(void) {\n    char open = '(';   /* char literal: ( is not a bracket */\n    printf("%c [%d]\\n", open, (1 + 2) * 3);\n    return 0;\n}`},
+ {n:'✘ C – unterminated comment',l:'c',c:'int main() {\n  /* TODO: finish this later\n  return 0;\n}'},
+ {n:'✔ Python – valid (comments, docstring)',l:'py',c:'def area(r):\n    # sets of (brackets in a comment are ignored\n    data = {"unit": "cm", "vals": [r * r, (r + 1)]}\n    """docstring with a stray ) and ] inside"""\n    return data'},
+ {n:'✘ Python – wrong closer',l:'py',c:'values = [1, 2, (3 + 4]\nprint(values)'},
+ {n:'↔ Same text, other rules: Python comment (switch preset to JavaScript!)',l:'py',c:'total = (1 + 2)  # note: ) in a comment is ignored in Python'},
+ {n:'✔ JSON – valid',l:'json',c:'{\n  "name": "dpda",\n  "tags": ["stack", "bracket"],\n  "nested": {"depth": [1, [2, [3]]]}\n}'},
+ {n:'✘ JSON – missing bracket',l:'json',c:'{\n  "items": [1, 2, 3,\n  "ok": true\n}'},
+ {n:'✔ Lisp – valid (comment hides a paren)',l:'lisp',c:'(defun square (x)\n  ; the answer (see below\n  (* x x))'},
+ {n:'⚡ Stress test – 100,000 characters',l:'js',c:stress}
+];
+
+function setLang(key){lang=key;const d=LANGS[key];$('lang').value=key;$('lnote').textContent=d.note;
+ const has=k=>d[k].length>0;
+ document.querySelectorAll('[data-need]').forEach(e=>e.style.display=has(e.dataset.need)?'':'none');
+ $('lb_str').textContent=d.str.map(s=>s.o).join(' ');$('lb_line').textContent=d.line.map(t=>t+' … ↵').join(' ');$('lb_blk').textContent=d.blk.map(p=>p[0]+' … '+p[1]).join(' ');
+ $('gmode').hidden=!(has('str')||has('line')||has('blk'));
+ const Q=['q0'];if(has('str'))Q.push('qstr');if(has('line'))Q.push('qline');if(has('blk'))Q.push('qblk');Q.push('qacc');
+ const toks=[...d.str.map(s=>s.o),...d.line,...d.blk.map(p=>p[0]+' '+p[1])];
+ $('def').innerHTML=`<b>M = (Q, Σ, Γ, δ, q0, Z, F)</b> — preset <b>${esc(d.n)}</b><br>Q = {${Q.join(', ')}} · Σ = { ( ) [ ] { } , o , $${toks.length?' , '+toks.map(t=>'<b>'+esc(t)+'</b>').join(' , '):''} } where <b>o</b> = any other character, <b>$</b> = end marker · Γ = {Z, (, [, {} · F = {qacc}`;
+ /* transition table */
+ rowMap={};const rows=[];const add=(id,l,r,k)=>{rowMap[id]={l,r,k,i:rows.length};rows.push([l,r,k])};
+ for(const X of ['Z','(','[','{']){for(const o in OPEN)add(o+'|'+X,`δ(q0, ${o}, ${X})`,`(q0, ${o}${X})`,'push');
+  for(const c in CLOSE)if(CLOSE[c]===X)add(c+'|'+X,`δ(q0, ${c}, ${X})`,'(q0, ε)','pop');add('o|'+X,`δ(q0, o, ${X})`,`(q0, ${X})`,'skip')}
+ add('$|Z','δ(q0, $, Z)','(qacc, Z)','accept');
+ d.str.forEach(s=>add('L:enterStr:'+s.o,`δ(q0, ${s.o}, ·)`,'(qstr, ·)','enter string'));
+ d.line.forEach(t=>add('L:enterLine:'+t,`δ(q0, ${t}, ·)`,'(qline, ·)','enter comment'));
+ d.blk.forEach(p=>add('L:enterBlk:'+p[0],`δ(q0, ${p[0]}, ·)`,'(qblk, ·)','enter comment'));
+ if(has('str')){add('L:str:body','δ(qstr, c ≠ closer, ·)','(qstr, ·)','ignore');add('L:str:close','δ(qstr, closer, ·)','(q0, ·)','leave string')}
+ if(has('line')){add('L:line:body','δ(qline, c ≠ ↵, ·)','(qline, ·)','ignore');add('L:line:exit','δ(qline, ↵, ·)','(q0, ·)','leave comment')}
+ if(has('blk')){add('L:blk:body','δ(qblk, c ≠ closer, ·)','(qblk, ·)','ignore');d.blk.forEach(p=>add('L:blk:close:'+p[1],`δ(qblk, ${p[1]}, ·)`,'(q0, ·)','leave comment'))}
+ $('tbl').innerHTML=rows.map((r,i)=>`<tr id="r${i}"><td>${esc(r[0])}</td><td>= ${esc(r[1])}</td><td>${r[2]}</td></tr>`).join('');hit=null}
+
+/* ---------- init / run ---------- */
+function init(){stop();const code=$('src').value;
+ LS=[0];for(let i=0;i<code.length;i++)if(code.charCodeAt(i)===10)LS.push(i+1);
+ A=analyze(code,lang);m=newM(code,lang);H=[];T=[cfg()];focus=null;hl=null;ok=tries=0;$('sb').className='';
+ $('finfo').textContent=`📄 ${FN()} · ${(code.length/1024).toFixed(1)} KB · ${LS.length} line${LS.length>1?'s':''}`;
+ renderReport();
+ say(mode==='w'?'Ready. Press <b>Step</b> – the machine reads one token at a time, left to right. The report above already shows the result for the whole file.':'Your turn! Look at the highlighted character, the state and the stack top, then choose what the DPDA must do.');
+ paint()}
+const nextSym=()=>{if(m.i>=m.code.length)return '$';if(m.q!=='q0')return 'text';const t=tokAt(m,m.i);if(t)return t.t;const c=m.code[m.i];return(c in OPEN||c in CLOSE)?c:'o'};
+function cfg(){const r=m.code.slice(m.i,m.i+12).replace(/\n/g,'↵').replace(/\t/g,'⇥');const rem=m.i>=m.code.length?'ε':r+(m.code.length-m.i>12?'…':'');
+ return `(${m.q}, ${rem}, ${m.st.slice(-9).reverse().map(x=>x.s).join('')+(m.st.length>9?'…':'')})`}
+function say(t,c,r){$('msg').className='msg '+(c||'');$('msg').innerHTML=t+(r?`<code>${esc(r)}</code>`:'')}
+function doStep(){if(m.status!=='run')return null;const snap={i:m.i,q:m.q,cur:m.cur,tokPos:m.tokPos,fired:m.fired,ne:m.errs.length};
+ const ev=adv(m);m.fired=ev.row;H.push({snap,ev});T.push(cfg());if(H.length>20000){H.splice(0,5000);T.splice(0,5000)}return ev}
+function undo(){const h=H.pop(),s=h.snap;T.pop();m.i=s.i;m.q=s.q;m.cur=s.cur;m.tokPos=s.tokPos;m.fired=s.fired;m.status='run';m.errs.length=s.ne;
+ if(h.ev.pushed)m.st.pop();if(h.ev.popped)m.st.push(h.ev.popped);$('sb').className=''}
+function back(){if(!H.length)return;stop();undo();say('Stepped back one move.');paint()}
+function step(){const ev=doStep();if(ev)show(ev)}
+function show(ev){const r=rowMap[ev.row],rule=r?r.l+' = '+r.r:'',cs=m.code.slice(ev.a,ev.b),len=ev.b-ev.a;let t,c='';
+ const kind=ev.to==='qstr'?'string literal':'comment';
+ switch(ev.k){
+  case 'push':t=`Read <b>'${esc(cs)}'</b> at ${at(ev.a)}, an opening bracket → <b>PUSH</b> it and remember where it was opened.`;break;
+  case 'pop':t=`Read <b>'${esc(cs)}'</b> at ${at(ev.a)} – it matches the top <b>'${ev.popped.s}'</b> (opened at ${at(ev.popped.pos)}) → <b>POP</b>.`;break;
+  case 'skip':t=ev.from==='q0'?`Read ${len} ordinary character(s) → stack unchanged (self-loop).`:`Inside a ${ev.from==='qstr'?'string literal':'comment'}: skipped ${len} character(s). Brackets here are plain text, so the stack is untouched.`;break;
+  case 'mode':t=ev.from==='q0'?`Found <b>${esc(cs)}</b> at ${at(ev.a)} – the start of a ${kind}. State <b>q0 → ${ev.to}</b>: brackets are ignored until it ends.`:`Found the end (<b>${cs==='\n'?'newline':esc(cs)}</b>) → back to state <b>q0</b>. Brackets count again.`;break;
+  case 'accept':t='✔ ACCEPT – end of input reached and only the bottom marker Z is left: every bracket was matched.';c='ok';$('sb').className='win';break;
+  case 'fail':{const e=ev.err;t=`✘ REJECT – <b>${esc(e.msg)}</b> at ${at(e.pos)}`+(e.rel>=0&&e.rel!=null?` (opened at ${at(e.rel)})`:'')+'.'+(e.kind==='mismatch'||e.kind==='extra'||e.kind==='unclosed'?'<br>No rule exists for this (input, stack-top) pair → dead state.':'');c='bad';$('sb').className='lose';break}
+  default:t='Done.'}
+ say(t,c,rule);paint(ev)}
+function guess(k){if(m.status!=='run')return;tries++;const ev=doStep(),map={push:'push',pop:'pop',skip:'skip',mode:'mode',accept:'accept',end:'reject',fail:'reject'};
+ if(map[ev.k]===k){ok++;show(ev)}else{undo();const s=$('sb');s.classList.add('shake');setTimeout(()=>s.classList.remove('shake'),400);
+  say(`Not quite. State: <b>${m.q}</b> · next symbol: <b>${esc(nextSym()==='o'?'an ordinary char':nextSym())}</b> · stack top: <b>${esc(m.st[m.st.length-1].s)}</b>.<br>Push = opener · Pop = matching closer · Ignore = ordinary text / inside a string or comment · Switch state = a string or comment starts or ends · Reject = wrong closer or leftover opener.`,'bad');paint()}}
+function runEnd(){stop();let last,g=0;while(m.status==='run'&&g++<400000)last=doStep();if(last)show(last)}
+function auto(){stop();tm=setInterval(()=>{if(m.status!=='run')return stop();step()},1550-$('spd').value)}
+function stop(){clearInterval(tm)}
+function setMode(w){mode=w?'w':'g';$('mw').classList.toggle('on',w);$('mg').classList.toggle('on',!w);$('watch').hidden=!w;$('game').hidden=w;$('score').hidden=w;init()}
+
+/* ---------- drawing ---------- */
+function paint(ev){
+ $('cq').textContent='state: '+m.q;$('cd').textContent='depth: '+(m.st.length-1);$('cn').textContent='next: '+(m.status==='run'?nextSym():'–');$('ck').textContent='step: '+H.length;
+ renderCode();drawStack(ev);drawDiagram(ev);drawTrace();
+ if(hit!=null){const o=$('r'+hit);if(o)o.className=''}hit=null;if(m.fired&&rowMap[m.fired]){hit=rowMap[m.fired].i;$('r'+hit).className='hit'}
+ $('bs').disabled=m.status!=='run';$('bb').disabled=!H.length;$('score').textContent=`score ${ok}/${tries}`;
+ const c=$('curL');if(c){const x=(m.i/Math.max(m.code.length,1))*600;c.setAttribute('x1',x);c.setAttribute('x2',x)}}
+function drawStack(ev){const K=11,st=m.st,from=Math.max(0,st.length-K);let h=from?`<div class="more">⋮ ${from} deeper</div>`:'';
+ for(let k=from;k<st.length;k++){const it=st[k];h+=`<div class="blk ${COL[it.s]}${ev&&ev.pushed&&k===st.length-1?' in':''}">${esc(it.s)}<small>${it.pos>=0?'@'+at(it.pos):'bottom'}</small></div>`}
+ if(ev&&ev.popped)h+=`<div class="blk out ${COL[ev.popped.s]}">${esc(ev.popped.s)}<small>popped</small></div>`;
+ $('stack').innerHTML=h;if(ev&&ev.popped)setTimeout(()=>$('stack').querySelectorAll('.out').forEach(x=>x.remove()),380)}
+function drawDiagram(ev){['q0','qstr','qline','qblk','qacc'].forEach(q=>$('n_'+q).classList.toggle('act',m.q===q));
+ let e=null;if(ev&&ev.k!=='fail'){const r=ev.row||'';e=r.startsWith('L:str')||r.startsWith('L:enterStr')?'e_str':r.startsWith('L:line')||r.startsWith('L:enterLine')?'e_line':r.startsWith('L:blk')||r.startsWith('L:enterBlk')?'e_blk':r==='$|Z'?'e_acc':'e_loop'}
+ ['e_str','e_line','e_blk','e_acc','e_loop'].forEach(id=>$(id).classList.toggle('hot',id===e))}
+function drawTrace(){const K=40,s=Math.max(0,T.length-K);let h=s?`<div class="tc d">… ${s} earlier configuration(s)</div>`:'';
+ for(let i=s;i<T.length;i++)h+=`<div class="tc${i===T.length-1?' now':''}">${i>0?'⊢ ':''}${esc(T[i])}</div>`;const b=$('trace');b.innerHTML=h;b.scrollTop=b.scrollHeight}
+function renderCode(){const code=m.code,n=code.length,box=$('code');
+ if(!n){box.innerHTML='<span class="d">(empty input)</span>';return}
+ const nl=LS.length,heat=$('heat').checked;
+ let fp=focus!=null?focus:(m.status==='run'?Math.min(m.i,n-1):(m.errs.length?m.errs[0].pos:Math.min(m.i,n-1)));if(fp<0)fp=0;
+ const fl=lineOf(fp);let l0=0,l1=nl-1;if(nl>60){l0=Math.max(0,fl-7);l1=Math.min(nl-1,fl+8)}
+ const op=new Set();for(const x of m.st)if(x.pos>=0)op.add(x.pos);
+ const er=new Set();if(m.status==='rej')m.errs.forEach(e=>{er.add(e.pos);if(e.rel>=0)er.add(e.rel)});if(hl)hl.forEach(p=>er.add(p));
+ const runs=(s,e)=>{let out='',cc='',buf='';
+  for(let p=s;p<e;p++){const ch=code[p];if(ch==='\r')continue;const c=[];
+   if(p<m.i)c.push('d');if(m.status==='run'&&p===m.i)c.push('cur');if(op.has(p))c.push('op');if(er.has(p))c.push('er');else if(A.errPos.has(p))c.push('e2');
+   const k=A.cls[p];if(k===1)c.push('sx');else if(k===2)c.push('cm');else if(heat&&A.dep[p])c.push('h'+(A.dep[p]%6));
+   const cs=c.join(' ');if(cs!==cc){if(buf)out+=`<span class="${cc}">${esc(buf)}</span>`;buf='';cc=cs}buf+=ch}
+  if(buf)out+=`<span class="${cc}">${esc(buf)}</span>`;return out};
+ let h=l0>0?`<div class="gap">⋮ ${l0} line(s) above</div>`:'';
+ for(let li=l0;li<=l1;li++){const ls=LS[li],le=li+1<nl?LS[li+1]-1:n;let s=ls,e=le,pre='',post='';
+  if(le-ls>220){if(fp>=ls&&fp<=le){s=Math.max(ls,fp-80);e=Math.min(le,s+200)}else e=ls+200;if(s>ls)pre='…';if(e<le)post='…'}
+  h+=`<div class="l${A.errLines.has(li)?' le':''}"><span class="gn">${li+1}</span>${pre}${runs(s,e)}${post}</div>`}
+ if(l1<nl-1)h+=`<div class="gap">⋮ ${nl-1-l1} line(s) below</div>`;
+ else if(m.status==='run'&&m.i>=n)h+='<div class="l"><span class="gn"></span><span class="cur">$</span> <span class="d">end of input</span></div>';
+ box.innerHTML=h;const c=box.querySelector('.cur');if(c)box.scrollTop=Math.max(0,c.offsetTop-box.clientHeight/2)}
+function jump(p){focus=p;hl=[p];const e=A.errs.find(x=>x.pos===p);if(e&&e.rel>=0)hl.push(e.rel);renderCode();$('code').scrollIntoView({block:'nearest',behavior:'smooth'})}
+
+/* ---------- report ---------- */
+function lineText(li){return A.code.slice(LS[li],li+1<LS.length?LS[li+1]-1:A.code.length).replace(/\r$/,'').replace(/\t/g,' ')}
+function cerr(e){const li=lineOf(e.pos),ls=LS[li],col=e.pos-ls,gw=String(li+1).length;let line=lineText(li),mk=' '.repeat(col)+'^',note='';
+ if(e.rel!=null&&e.rel>=0){if(lineOf(e.rel)===li){const c2=e.rel-ls,arr=' '.repeat(Math.max(col,c2)+1).split('');arr[c2]='~';arr[col]='^';mk=arr.join('').trimEnd();note=' (opened here ~)'}else note=` (opened at ${at(e.rel)})`}
+ if(line.length>120){const off=Math.max(0,col-50);line=line.slice(off,off+110);mk=mk.slice(off,off+110)}
+ return `${FN()}:${li+1}:${col+1}: error: ${e.msg}${note}\n ${li+1} | ${line}\n ${' '.repeat(gw)} | ${mk}`}
+function fixPlan(){return A.edits.slice().sort((a,b)=>a.pos-b.pos).map(e=>e.del?`delete '${A.code.slice(e.pos,e.pos+e.del)}' at ${at(e.pos)}`:`insert '${e.ins}' ${e.eof?'at the end of the file':'before '+at(e.pos)}`)}
+function chartSvg(){const n=Math.max(A.code.length,1),B=300,mx=Math.max(A.stat.max,1),ser=new Array(B).fill(0),tl=A.tl;let cur=0,pi=0;
+ for(let b=0;b<B;b++){const end=Math.floor((b+1)*n/B);let v=cur;while(pi<tl.length&&tl[pi]<end){cur=tl[pi+1];if(cur>v)v=cur;pi+=2}ser[b]=v}
+ const pts=ser.map((v,b)=>`${(b*600/(B-1)).toFixed(1)},${(88-v/mx*78).toFixed(1)}`);
+ const ticks=A.errs.map(e=>`<line x1="${(e.pos/n*600).toFixed(1)}" x2="${(e.pos/n*600).toFixed(1)}" y1="0" y2="90" stroke="var(--bad)" stroke-width="2"/>`).join('');
+ return `<svg id="chart" viewBox="0 0 600 90" preserveAspectRatio="none" role="img" aria-label="Stack depth along the file"><path d="M0,88 L${pts.join(' L')} L600,88 Z" fill="var(--acc)" fill-opacity=".25" stroke="var(--acc)" stroke-width="1.5" vector-effect="non-scaling-stroke"/>${ticks}<line id="curL" x1="0" x2="0" y1="0" y2="90" stroke="var(--ink)" stroke-width="1.5" stroke-dasharray="3 3"/></svg>`}
+function renderReport(){const S=A.stat,n=A.code.length,lines=LS.length,opens=S.cnt['(']+S.cnt['[']+S.cnt['{'],ne=A.errs.length,good=!ne;
+ A.errLines=new Set(A.errs.map(e=>lineOf(e.pos)));A.errPos=new Set();A.errs.forEach(e=>{A.errPos.add(e.pos);if(e.rel>=0)A.errPos.add(e.rel)});
+ const card=(c,b,s)=>`<div class="card ${c}"><b>${b}</b><span>${s}</span></div>`;
+ let h='<div class="cards">'+
+  card(good?'ok':'bad',good?'✔ Balanced':`✘ ${ne} error${ne>1?'s':''}`,good?'every bracket is matched':'first: '+esc(A.errs[0].msg))+
+  card('',`${lines} lines`,`${n.toLocaleString()} characters`)+
+  card('',`${opens} brackets`,`( ${S.cnt['(']} · [ ${S.cnt['[']} · { ${S.cnt['{']} &nbsp;|&nbsp; ${S.cl} closed`)+
+  card('',`depth ${S.max}`,S.max?`deepest at ${at(S.maxPos)}`:'no nesting')+
+  card('',`${S.str} · ${S.com}`,'strings · comments skipped')+
+  card('',`${A.ms.toFixed(1)} ms`,'one left-to-right pass, O(n)')+'</div>';
+ h+=`<div class="m" style="margin-bottom:4px">Stack depth along the file <span class="m">(red ticks = errors, dashed line = DPDA position)</span></div>`+chartSvg();
+ const shown=A.errs.slice(0,15);
+ if(ne){h+='<h2 style="margin-top:12px">Compiler-style output</h2>'+shown.map(e=>`<div class="ce" tabindex="0" role="button" onclick="jump(${e.pos})" onkeydown="if(event.key==='Enter')jump(${e.pos})"><pre>${esc(cerr(e))}</pre></div>`).join('');
+  if(ne>15)h+=`<div class="m">… and ${ne-15} more (see the downloaded report).</div>`;
+  h+='<div class="m">The stepper below stops at the <b>first</b> error (dead state). This report keeps scanning with panic-mode recovery to find all of them.</div>'}
+ const fp=fixPlan();
+ h+=`<div class="row">${fp.length?`<button onclick="autofix()">✨ Auto-fix (${fp.length} edit${fp.length>1?'s':''})</button>`:''}<button class="s" onclick="dl()">⬇ Download report</button></div>`;
+ if(fp.length)h+=`<details style="margin-top:6px"><summary class="m">Fix plan</summary><div class="m">${fp.slice(0,10).map(esc).join('<br>')}${fp.length>10?'<br>…':''}</div></details>`;
+ else if(ne)h+='<div class="m" style="margin-top:6px">Unterminated strings/comments have no automatic fix – close them by hand.</div>';
+ $('repBody').innerHTML=h}
+function reportText(){const S=A.stat,n=A.code.length;
+ let t=`DPDA Studio – Bracket Checker report\nFile: ${FN()}\nPreset: ${LANGS[lang].n}\nVerdict: ${A.errs.length?A.errs.length+' error(s)':'balanced'}\nSize: ${LS.length} lines, ${n} characters\n`+
+  `Brackets opened: ( ${S.cnt['(']}  [ ${S.cnt['[']}  { ${S.cnt['{']}   closed: ${S.cl}\nMax nesting depth: ${S.max}${S.max?' at '+at(S.maxPos):''}\nStrings skipped: ${S.str}   Comments skipped: ${S.com}\nAnalysis time: ${A.ms.toFixed(1)} ms\n`;
+ if(A.errs.length)t+='\n'+A.errs.map(cerr).join('\n\n')+'\n';
+ const fp=fixPlan();if(fp.length)t+='\nSuggested fix:\n - '+fp.join('\n - ')+'\n';return t}
+function dl(){const b=new Blob([reportText()],{type:'text/plain'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=FN().replace(/\.[^.]*$/,'')+'-bracket-report.txt';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+function autofix(){const code=$('src').value,cnt=A.edits.length,eof=A.edits.find(e=>e.eof);
+ let s=A.edits.filter(e=>!e.eof).sort((a,b)=>b.pos-a.pos).reduce((s,e)=>s.slice(0,e.pos)+e.ins+s.slice(e.pos+e.del),code);
+ if(eof){const base=s.trimEnd(),tail=s.slice(base.length),last=code.trimEnd().length-1,nl=/\n/.test(base)||(last>=0&&A.cls[last]===2);s=base+(nl?'\n':'')+eof.ins+(tail.includes('\n')?'\n':'')}
+ $('src').value=s;init();toast(A.errs.length?`Applied ${cnt} edit(s); ${A.errs.length} problem(s) remain – fix those by hand.`:`Applied ${cnt} edit(s) – the file is now balanced ✔`)}
+
+/* ---------- input: examples, files, drag & drop ---------- */
+EX.forEach((e,i)=>$('ex').add(new Option(e.n,i)));Object.keys(LANGS).forEach(k=>$('lang').add(new Option(LANGS[k].n,k)));
+$('ex').onchange=()=>{const e=EX[$('ex').value];setLang(e.l);fileName=null;$('src').value=typeof e.c==='function'?e.c():e.c;init()};
+$('lang').onchange=()=>{setLang($('lang').value);init()};
+$('src').oninput=()=>{clearTimeout(dbt);dbt=setTimeout(init,$('src').value.length>20000?250:0)};
+$('heat').onchange=()=>paint();
+$('openBtn').onclick=()=>$('file').click();
+function loadFile(f){if(f.size>5e6){toast('That file is over 5 MB – please pick a smaller one.');return}
+ const r=new FileReader();r.onload=()=>{fileName=f.name;const ext=(f.name.split('.').pop()||'').toLowerCase(),key=Object.keys(LANGS).find(k=>LANGS[k].ext.includes(ext));
+  if(key)setLang(key);$('src').value=String(r.result);$('ex').selectedIndex=-1;init();
+  toast(key?`Loaded ${f.name} → ${LANGS[key].n} preset`:`Unknown extension “.${ext}” – kept the ${LANGS[lang].n} rules`)};
+ r.onerror=()=>toast('Could not read that file.');r.readAsText(f)}
+$('file').onchange=e=>{const f=e.target.files[0];if(f)loadFile(f);e.target.value=''};
+const sp=$('srcPanel');['dragenter','dragover'].forEach(t=>sp.addEventListener(t,e=>{e.preventDefault();sp.classList.add('drag')}));
+sp.addEventListener('dragleave',e=>{if(!sp.contains(e.relatedTarget))sp.classList.remove('drag')});
+sp.addEventListener('drop',e=>{e.preventDefault();sp.classList.remove('drag');const f=e.dataTransfer.files[0];if(f)return loadFile(f);const t=e.dataTransfer.getData('text');if(t){fileName=null;$('src').value=t;init()}});
+$('mw').onclick=()=>setMode(true);$('mg').onclick=()=>setMode(false);
+document.addEventListener('keydown',e=>{if(/^(TEXTAREA|INPUT|SELECT)$/.test(e.target.tagName)||mode!=='w')return;if(e.key==='ArrowRight'){e.preventDefault();step()}else if(e.key==='ArrowLeft'){e.preventDefault();back()}});
+setLang('js');$('src').value=EX[0].c;init();
+</script></body></html>
